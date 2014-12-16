@@ -33,7 +33,6 @@ enum ColumnLen
 
 class Hotel
 {
-
 	int _id;
 
 	///---------------------
