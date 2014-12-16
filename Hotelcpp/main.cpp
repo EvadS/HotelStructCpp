@@ -129,6 +129,11 @@ public :
 		return _name;
 	}
 
+	int get_PleaceNum()
+	{
+		return _placeNum;
+	}
+
 
 
 	///---------------------
@@ -498,6 +503,10 @@ void PrintCurrRow()
 	cout<<"Hello world!"<<endl;
 }
 
+
+///------------------------------------------
+/// удаление записи из файла
+///------------------------------------------
 bool RemoveRecord(int pId,char * pFileName)
 {
 	bool  lresult = false;
@@ -558,8 +567,31 @@ bool RemoveRecord(int pId,char * pFileName)
 	return lresult;
 }
 
+///-------------------------------
+/// удаление элементов из массива
+///-------------------------------
+bool RemoveRecord(int pId)
+{
+	bool  lresult = false;
+	
+	int j= 0;
+	for(int i = 0; i< currLineNum;i++)
+	{
+		if(i != pId)
+		{
 
+			HotelRecord[i] = HotelRecord[j];
+			j++;
+		}
+	}
+	
+
+	return lresult;
+}
+
+///-----------------------------------
 /// флаг - существует ли флаг 
+///-----------------------------------
 bool isExist(char * pFileName)
 {
    fstream file;
@@ -649,9 +681,28 @@ int getHotelArrayPositionById(int pid,char *pFileName)
     lpositionNum--;
 
 	return lpositionNum;
-
 }
 
+
+///----------------------------------------------
+/// поиск по id и количеству мест
+///----------------------------------------------
+void FindByIdAndRoomNum(int pid,int pleaceNum)
+{
+	bool  lresult = false;
+
+	for(int i = 0; i< currLineNum;i++)
+	{
+		if((i != pid) && (HotelRecord[i].get_PleaceNum() == pleaceNum))
+		{
+			cout<<HotelRecord[i];
+		}
+	}
+	
+}
+///--------------------------------------------------------
+/// редактирование записи
+///--------------------------------------------------------
 void EditHotelData(int pId,char * pFileName,Hotel &photel)
 {	
 	Hotel ltemp;
@@ -733,7 +784,6 @@ int main ()
 		 CreateTestRecord(FILENAME);	
 	 }	
 
-
 	// выбранный пункт меню
 	int lshoose  =0;
 	do
@@ -755,8 +805,7 @@ int main ()
 				{
 					cout<<HotelRecord[i];
 				}
-			}
-			
+			}			
 		}
 
 		// Добавить запись
@@ -773,11 +822,20 @@ int main ()
 			int lid;
 			cout<<"введите id удаляемой записи: ";
 			cin>>lid;
+
+			char answ;
+			cout<<"Вы действительно хотите удалить запись ? (y/n)" <<endl;
+			cin>>answ;
+
+			if(answ !='y')
+			{
+				continue;
+			}
 			
 			//если запись существует
 			if(isExistFilebyId(lid,FILENAME))
 			{
-				if(RemoveRecord(lid,FILENAME))
+				if(RemoveRecord(lid))
 				{
 					cout<<"запись по id удалена"<<endl;
 				}
@@ -880,8 +938,6 @@ int main ()
 
 
 	}while(lshoose!=0);
-	
-	int a(10);
 
 	cout<<"Введите любой символ для продолжения ....";
 	
