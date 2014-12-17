@@ -3,10 +3,11 @@
 #include <fstream>
 
 #include <Windows.h>
-
 #include <iomanip>
+#include <string>
 
 #define FILENAME "PERSFILE.txt"
+#define LISTNAME "LISTFILE.dat"
 #define ROWNUM	 20 //максимально число строк в файле 
 
 using namespace std;
@@ -133,6 +134,11 @@ public :
 		return _placeNum;
 	}
 
+	int get_StarNum()
+	{
+		return _starNum;
+	}
+
 
 
 	///---------------------
@@ -204,11 +210,15 @@ public :
 	friend istream &operator>>(istream &stream,Hotel &o);
 
 };
+
 // количество записей
 int currLineNum;
 
 ///список отелей 
 Hotel HotelRecord[ROWNUM];
+
+// 
+string HotelList[ROWNUM];
 
 
 ///---------------------
@@ -455,8 +465,9 @@ void CreateTestRecord(char *fileName )
 	 Write(hotel,FILENAME);
 }
 
-
+///-------------------------------------------
 /// отображение меню программы на дисплее
+///-------------------------------------------
 int  PrintMenu()
 {
 	int lshoose = 0;
@@ -485,13 +496,18 @@ int  PrintMenu()
 		cout<<"7. Сотировка записей по строковому полю"<<endl;	
 		cout<<"8. Структурная сортировказаписей"<<endl;	
 		cout<<"9. Сохранение результатов в файл"<<endl;	
+		cout<<"10. Поиск в базе данных"<<endl;	
+		cout<<"11. Формирование перечня"<<endl;	
+		cout<<"12. Просмотр перечня"<<endl;	
+		cout<<"13. Сортировка перечня"<<endl;	
+		cout<<"14. Сохранение перечня в файле"<<endl;	
 		cout<<"0. Выход"<<endl;
 
 		cin>>lshoose;
 
 		lfisrt = false;
 
-	}while(lshoose< 0 || lshoose> 9 );
+	}while(lshoose< 0 || lshoose> 14 );
 
 	return lshoose;
 }
@@ -506,7 +522,7 @@ void PrintCurrRow()
 ///------------------------------------------
 /// удаление записи из файла
 ///------------------------------------------
-bool RemoveRecord(int pId,char * pFileName)
+bool RemoveRecordFromFile(int pId,char * pFileName)
 {
 	bool  lresult = false;
 	Hotel ltemp;
@@ -569,10 +585,8 @@ bool RemoveRecord(int pId,char * pFileName)
 ///-------------------------------
 /// удаление элементов из массива
 ///-------------------------------
-bool RemoveRecord(int pId)
-{
-	bool  lresult = false;
-	
+void RemoveRecord(int pId)
+{	
 	int j= 0;
 	for(int i = 0; i< currLineNum;i++)
 	{
@@ -582,10 +596,7 @@ bool RemoveRecord(int pId)
 			HotelRecord[i] = HotelRecord[j];
 			j++;
 		}
-	}
-	
-
-	return lresult;
+	}		
 }
 
 ///-----------------------------------
@@ -670,8 +681,7 @@ int getHotelArrayPositionById(int pid,char *pFileName)
 		if(lhotel.get_Id() == pid )
 		{
 			break;
-		}
-		
+		}		
 
 		file.read((char*)&lhotel,sizeof(struct Hotel));
 		lpositionNum++;
@@ -750,6 +760,7 @@ void EditHotelData(int pId,char * pFileName,Hotel &photel)
 			_getch();
 			exit(1);
 		}
+	
 	// записать оставшееся данные
 	for(int j = 0;j<i;j++)
 	{	
@@ -757,6 +768,28 @@ void EditHotelData(int pId,char * pFileName,Hotel &photel)
 	}
 
 	ReadInFile(pFileName);	
+}
+
+/// -------------------------------
+/// структурная сортировка  
+///--------------------------------
+void SortByStruct()
+{
+	Hotel temp;	
+
+	for(int j =1; j < currLineNum;j++)
+	{
+		for(int i = 0; i<currLineNum;i++)
+		{
+			if(strcmp(HotelRecord[i].get_Name(),HotelRecord[i].get_Name())>0   
+				&& HotelRecord[i].get_StarNum() >HotelRecord[i+1].get_StarNum())
+			{
+				temp= HotelRecord[i];
+				HotelRecord[i] = HotelRecord[i+1];
+				HotelRecord[i+1] = temp;
+			}
+		}
+	}
 }
 
 ///-----------------------------
@@ -770,6 +803,76 @@ bool EditHotel(int pid,char *pfileName)
 
 	return lresult;
 }
+
+///----------------------------------------
+/// создание перечня
+///----------------------------------------
+void CreateList()
+{
+	for(int i = 0; i<=currLineNum;i++)
+	{
+		HotelList[i] = HotelRecord[i].get_Name();
+	}
+}
+
+///---------------------------------------
+/// просмотр перечня
+///----------------------------------------
+void PrintList()
+{
+	cout<<"Текущее содержимое перечня :"<<endl;
+
+	for(int i = 0; i<=currLineNum;i++)
+	{
+		cout<<i<<".	";
+		cout<<HotelList[i]<<endl;
+	}
+}
+
+///---------------------------------------
+/// сортировка перечня
+///----------------------------------------
+void SortList()
+{	
+	string temp;
+
+	for(int j=1;j<=currLineNum-1;j++)
+	{
+		for(int i = 0; i<=currLineNum;i++)
+		{
+			if((HotelList[i]>HotelList[i+1])) ;
+			{
+				temp = HotelList[i];
+				HotelList[i] = HotelList[i+1];
+				HotelList[i] = temp; 			
+			}
+		}
+	}
+}
+///----------------------------------
+/// сохранение перечня в файле
+///----------------------------------
+void WriteList()
+{
+	fstream file;
+	file.open(LISTNAME, ios::out| ios::trunc);
+
+	if(file == NULL)
+    {
+        cout << "Ошибка чтения  файла!";
+		_getch();
+        exit(1);
+    }
+
+	for(int i = 0; i<=currLineNum;i++)
+	{
+		file.write((char*)&HotelList[i] ,sizeof(HotelList[i]));
+	}
+}
+
+	
+
+
 
 int main ()
 {
@@ -834,7 +937,7 @@ int main ()
 			//если запись существует
 			if(isExistFilebyId(lid,FILENAME))
 			{
-				if(RemoveRecord(lid))
+				RemoveRecord(lid);
 				{
 					cout<<"запись по id удалена"<<endl;
 				}
@@ -934,7 +1037,35 @@ int main ()
 				UpdateDate(HotelRecord[i],FILENAME);
 			}
 		}
+		else if(lshoose==10)
+		{
+			// поиск 
+			int id;
+			cout<<"введите ID записи :";
+			cin>>id;
 
+			int pleaceNum;
+			cout<<"Введите количество мест	:";
+			cin>>pleaceNum;
+			FindByIdAndRoomNum(id,pleaceNum);
+		}
+	    // формирование перечня 
+		else if(lshoose==11)
+		{
+			CreateList();
+		}
+		else if(lshoose ==12)
+		{
+			PrintList();
+		}
+		else if(lshoose ==13)
+		{
+			SortList();
+		}
+		else if(lshoose ==14)
+		{
+			WriteList();
+		}
 
 	}while(lshoose!=0);
 
