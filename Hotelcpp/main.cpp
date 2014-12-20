@@ -188,6 +188,53 @@ public :
 	 
 		return *this;	
 	}
+	///--------------------------------------
+	/// переопределение операции меньше для сравнения элементов структур
+	///--------------------------------------
+	bool operator < ( Hotel& dec)
+	{
+		bool less = false;
+		//<0 str1 меньше str2
+		int len = strcmp(_name,dec._name);  
+		if(id < dec._id  && len<0)	  
+		{
+			return true;
+		}
+		return less;
+	}
+	
+	///--------------------------------------
+	/// переопределение операции больше для сравнения элементов структур
+	///--------------------------------------
+    bool operator > (const Hotel& dec)
+	{
+		bool less = false;
+		//<0 str1 меньше str2
+		int len = strcmp(_name,dec._name);  
+		
+		if(id > dec._id && len>0)	  
+		{
+			return true;
+		}
+
+		return less;
+	}
+	///--------------------------------------
+	/// переопределение операции равно для сравнения элементов структур
+	///--------------------------------------
+	bool operator == (const Hotel& dec)
+	{
+		bool less = false;
+		//<0 str1 меньше str2
+		int len = strcmp(_name,dec._name);  
+		
+		if(id == dec._id && len==0)	  
+		{
+			return true;
+		}
+
+		return less;
+	}
 
 	///---------------------
 	/// деструктор
@@ -211,8 +258,14 @@ public :
 
 };
 
-// количество записей
-int currLineNum;
+//----------------------------------------------//
+
+
+// текущий  записей
+//int currLineNum;
+
+int size =0;
+bool sizeList = 0;
 
 ///список отелей 
 Hotel HotelRecord[ROWNUM];
@@ -220,6 +273,7 @@ Hotel HotelRecord[ROWNUM];
 // 
 string HotelList[ROWNUM];
 
+bool IsEmpty;
 
 ///---------------------
 /// количество записей в файле
@@ -368,7 +422,7 @@ istream &operator>>(istream &stream,Hotel &o)
 void Write(Hotel pValue,char *pFileName)
 {
 	fstream file;
-	file.open(pFileName,/* ios::app|*/ ios::out| ios::trunc);
+	file.open(pFileName, ios::app|ios::out);
 
 	if(file == NULL)
     {
@@ -381,28 +435,28 @@ void Write(Hotel pValue,char *pFileName)
 }
 
 /// обновить данные на диск 
-/// <param = pValue>Элемент который необходимо сохранить в файл </param>
 /// <param = fileName > указатель на строку содержащую имя файла</param>
-void UpdateDate(Hotel pValue,char *pFileName)
+void UpdateDate(char *pFileName)
 {
 	fstream file;
-	file.open(pFileName, ios::app|ios::out/* ios::trunc*/);
+	file.open(pFileName, ios::out |ios::trunc);
 
 	if(file == NULL)
     {
         cout << "Ошибка чтения  файла!";
 		_getch();
         exit(1);
-    }
-
-	file.write((char*)&pValue,sizeof(Hotel));	
+    }	
 }
 
 /// считать все записи из файла  
 /// <param = fileName > указатель на строку содержащую имя файла</param>
 void ReadInFile(char * pFileName)
 {	
+	size = 0;
+
 	Hotel lhotel;
+	IsEmpty = true;
 
 	fstream file;
 	file.open(pFileName, ios::app| ios::out | ios::in /*| ios::binary*/);
@@ -417,21 +471,22 @@ void ReadInFile(char * pFileName)
 	int i =0;
 	// установить позицию курсора в начало
 	file.seekg(0);
-	//file.read(reinterpret_cast<char*>(&lplane),sizeof(lplane));
+	
 	file.read((char*)&lhotel,sizeof(struct Hotel));
-
-	currLineNum =0;
+	
 	while(!file.eof())
 	{			
 		// считать данные о следующем 
 		HotelRecord[i] = lhotel;
 		i++;
-
+		IsEmpty =false;
 		file.read((char*)&lhotel,sizeof(struct Hotel));
-		currLineNum++;
+		size++;
 	}
 
-    currLineNum--;
+	IsEmpty = size == 0;
+	
+    size;
 }
 
 
@@ -444,7 +499,6 @@ void CreateTestRecord(char *fileName )
 	ofstream out(fileName);  
     out.close();  
 	
-	Hotel hotel(0,"Интурист","Ленина 1 ",4,5,300);
 
 	// открываем для записи
 	fstream file;
@@ -462,7 +516,6 @@ void CreateTestRecord(char *fileName )
 
     file.close(); 
 
-	 Write(hotel,FILENAME);
 }
 
 ///-------------------------------------------
@@ -489,12 +542,12 @@ int  PrintMenu()
 		cout<<"\n Выберите пункт меню :"<<endl;
 		cout<<"1. Загрузить все записи."<<endl;
 		cout<<"2. Просмотреть все текущие записи"<<endl;
-		cout<<"3. Добавлениеновой записи "<<endl;
+		cout<<"3. Добавление новой записи "<<endl;
 		cout<<"4. Удаление записи из базы данных"<<endl;
 		cout<<"5. Редактировать запись в базе данных"<<endl;
 		cout<<"6. Сортировка записей по числовому полю"<<endl;	
 		cout<<"7. Сотировка записей по строковому полю"<<endl;	
-		cout<<"8. Структурная сортировказаписей"<<endl;	
+		cout<<"8. Структурная сортировка записей"<<endl;	
 		cout<<"9. Сохранение результатов в файл"<<endl;	
 		cout<<"10. Поиск в базе данных"<<endl;	
 		cout<<"11. Формирование перечня"<<endl;	
@@ -539,12 +592,11 @@ bool RemoveRecordFromFile(int pId,char * pFileName)
     }
 
 	int i =0;
+	
 	// установить позицию курсора в начало
 	file.seekg(0);
-	//file.read(reinterpret_cast<char*>(&lplane),sizeof(lplane));
 	file.read((char*)&ltemp,sizeof(struct Hotel));
-
-	currLineNum =0;
+	
 	while(!file.eof())
 	{	
 		if(ltemp.get_Id() ==pId  )
@@ -582,21 +634,32 @@ bool RemoveRecordFromFile(int pId,char * pFileName)
 	return lresult;
 }
 
+
 ///-------------------------------
 /// удаление элементов из массива
 ///-------------------------------
 void RemoveRecord(int pId)
 {	
-	int j= 0;
-	for(int i = 0; i< currLineNum;i++)
+	static int j= 0;
+
+	Hotel TempArr[20];
+
+	for(int i = 0; i< size;i++)
 	{
-		if(i != pId)
+		if(HotelRecord[i].get_Id() != pId)
 		{
 
-			HotelRecord[i] = HotelRecord[j];
+			TempArr[j] = HotelRecord[i];
 			j++;
 		}
-	}		
+	}	
+	cout<<j<<endl;
+	for(int i = 0;i<j;i++)
+	{
+		HotelRecord[i] = TempArr[i];
+	}	
+
+	size = j;
 }
 
 ///-----------------------------------
@@ -614,6 +677,22 @@ bool isExist(char * pFileName)
     }
 
 	return true;
+}
+
+///-----------------------------------
+/// флаг - существует запись по id
+///-----------------------------------
+bool isExistById(int pId)
+{
+   for(int i = 0; i< size;i++)
+	{
+		if(HotelRecord[i].get_Id() == pId)
+		{
+			return true;			
+		}
+	}
+
+	return false;
 }
 
 ///-----------------------------------------
@@ -639,7 +718,6 @@ bool isExistFilebyId(int pId,char *pfileName)
 	file.seekg(0);
 	file.read((char*)&lhotel,sizeof(struct Hotel));
 
-	currLineNum =0;
 	while(!file.eof())
 	{	
 		if(pId==lhotel.get_Id())
@@ -699,15 +777,27 @@ int getHotelArrayPositionById(int pid,char *pFileName)
 void FindByIdAndRoomNum(int pid,int pleaceNum)
 {
 	bool  lresult = false;
+	bool  isEnableRes = false;
 
-	for(int i = 0; i< currLineNum;i++)
+	for(int i = 0; i< size;i++)
 	{
-		if((i != pid) && (HotelRecord[i].get_PleaceNum() == pleaceNum))
+		if((HotelRecord[i].get_Id() == pid) && (HotelRecord[i].get_PleaceNum() == pleaceNum))
 		{
+			if(!isEnableRes)
+			{
+				cout<<"Результат поиска :" <<endl;
+				isEnableRes = true;
+			}
+
 			cout<<HotelRecord[i];
+			lresult = true;
 		}
 	}
 	
+	if(!lresult)
+	{
+		cout<<"не удалось найти данные по указанным параметрам "<<endl;
+	}
 }
 ///--------------------------------------------------------
 /// редактирование записи
@@ -730,10 +820,9 @@ void EditHotelData(int pId,char * pFileName,Hotel &photel)
 	int i =0;
 	// установить позицию курсора в начало
 	file.seekg(0);
-	//file.read(reinterpret_cast<char*>(&lplane),sizeof(lplane));
 	file.read((char*)&ltemp,sizeof(struct Hotel));
 
-	currLineNum =0;
+	
 	while(!file.eof())
 	{	
 		if(ltemp.get_Id() ==pId  )
@@ -777,9 +866,9 @@ void SortByStruct()
 {
 	Hotel temp;	
 
-	for(int j =1; j < currLineNum;j++)
+	for(int j =1; j < size;j++)
 	{
-		for(int i = 0; i<currLineNum;i++)
+		for(int i = 0; i<size;i++)
 		{
 			if(strcmp(HotelRecord[i].get_Name(),HotelRecord[i].get_Name())>0   
 				&& HotelRecord[i].get_StarNum() >HotelRecord[i+1].get_StarNum())
@@ -790,6 +879,7 @@ void SortByStruct()
 			}
 		}
 	}
+
 }
 
 ///-----------------------------
@@ -804,17 +894,6 @@ bool EditHotel(int pid,char *pfileName)
 	return lresult;
 }
 
-///----------------------------------------
-/// создание перечня
-///----------------------------------------
-void CreateList()
-{
-	for(int i = 0; i<=currLineNum;i++)
-	{
-		HotelList[i] = HotelRecord[i].get_Name();
-	}
-}
-
 ///---------------------------------------
 /// просмотр перечня
 ///----------------------------------------
@@ -822,12 +901,45 @@ void PrintList()
 {
 	cout<<"Текущее содержимое перечня :"<<endl;
 
-	for(int i = 0; i<=currLineNum;i++)
+	if(sizeList<1)
 	{
-		cout<<i<<".	";
-		cout<<HotelList[i]<<endl;
+		cout<<"Перечень пуст"<<endl;
+	}
+	else
+	{
+		cout<<"Текущее содержимое перечня"<<endl;
+		for(int i = 0; i<size;i++)
+		{
+			cout<<(i+1)<<".	";
+			cout<<HotelList[i]<<endl;
+		}
 	}
 }
+
+bool IsListEmpty =true;
+///----------------------------------------
+/// создание перечня
+///----------------------------------------
+void CreateList()
+{
+	if(size > 0)
+	{
+		IsListEmpty = false;
+		for(int i = 0; i<size;i++)
+		{
+			HotelList[i] = HotelRecord[i].get_Name();
+		}
+		sizeList = size;
+		PrintList();
+	}
+	else 
+	{
+		cout<<"Перечень пуст "<<endl;
+	}
+
+}
+
+
 
 ///---------------------------------------
 /// сортировка перечня
@@ -835,18 +947,26 @@ void PrintList()
 void SortList()
 {	
 	string temp;
-
-	for(int j=1;j<=currLineNum-1;j++)
+	if(sizeList>0)
 	{
-		for(int i = 0; i<=currLineNum;i++)
+		for(int j=1;j<=size-1;j++)
 		{
-			if((HotelList[i]>HotelList[i+1])) ;
+			for(int i = 0; i<=size;i++)
 			{
-				temp = HotelList[i];
-				HotelList[i] = HotelList[i+1];
-				HotelList[i] = temp; 			
+				if((HotelList[i]>HotelList[i+1])) ;
+				{
+					temp = HotelList[i];
+					HotelList[i] = HotelList[i+1];
+					HotelList[i] = temp; 			
+				}
 			}
 		}
+
+		PrintList();
+	}
+	else 
+	{
+		cout<<"Перечень пуст "<<endl;
 	}
 }
 ///----------------------------------
@@ -854,30 +974,53 @@ void SortList()
 ///----------------------------------
 void WriteList()
 {
-	fstream file;
-	file.open(LISTNAME, ios::out| ios::trunc);
-
-	if(file == NULL)
-    {
-        cout << "Ошибка чтения  файла!";
-		_getch();
-        exit(1);
-    }
-
-	for(int i = 0; i<=currLineNum;i++)
+	if(sizeList>0)
 	{
-		file.write((char*)&HotelList[i] ,sizeof(HotelList[i]));
+		fstream file;
+		file.open(LISTNAME, ios::out| ios::app);
+
+		if(file == NULL)
+		{
+			cout << "Ошибка чтения  файла!";
+			_getch();
+			exit(1);
+		}
+
+		for(int i = 0; i<=size;i++)
+		{
+			file.write((char*)&HotelList[i] ,sizeof(HotelList[i]));
+		}
+	}
+	else 
+	{
+		cout<<"Перечень пуст "<<endl;
 	}
 }
 
-	
 
-
+void PrintData()
+{
+	if(size>0)
+		{
+			PrintHeader();
+			for(int i =0 ; i<size;i++)
+			{
+				cout<<HotelRecord[i];
+			}
+		}
+		else 
+		{
+			cout<<"Список пуст"<<endl;
+		}
+}
 
 int main ()
 {
 	setlocale(LC_ALL,"Russian");		
 	setlocale(LC_CTYPE, ".1251");
+
+	IsEmpty = true;
+	sizeList = 0;
        
 	 // если файла нету
 	 if(!isExist(FILENAME))
@@ -895,32 +1038,53 @@ int main ()
 		//загружаем данные из файла
 		if(lshoose==1)
 		{
+			IsEmpty = true;			
 			ReadInFile(FILENAME);
+			
+			if(size > 0)
+			{
+				cout<<"Загруженые данные : "<<endl;
+				PrintData();
+			}
+			else
+			{
+				cout<<"Загруженный список является пустым"<<endl;
+			}
 		}
 		//вывести на экран 
 		else if(lshoose==2)
 		{	
-			if(currLineNum >= 0)
+			if(size>0)
 			{
 				PrintHeader();
-				for(int i =0 ; i<=currLineNum;i++)
+				for(int i =0 ; i<size;i++)
 				{
 					cout<<HotelRecord[i];
 				}
-			}			
+			}
+			else 
+			{
+				cout<<"Список пуст"<<endl;
+			}
 		}
 
 		// Добавить запись
 		else if(lshoose==3)
 		{	
 			Hotel hotel;
-			cin>>hotel;
-			currLineNum++;
-			HotelRecord[currLineNum] = hotel;
-			
+			cin>>hotel;	
+			size++;
+			HotelRecord[size-1] = hotel;
+				
+			IsEmpty = false;			
 		}
 		else if(lshoose==4)
 		{	
+			if(size<1)
+			{
+				cout<<"Список пуст "<<endl;
+				continue;
+			}
 			int lid;
 			cout<<"введите id удаляемой записи: ";
 			cin>>lid;
@@ -934,18 +1098,16 @@ int main ()
 				continue;
 			}
 			
-			//если запись существует
-			if(isExistFilebyId(lid,FILENAME))
-			{
+
+			if(isExistById(lid))
+			{			
+				//если запись существует			
 				RemoveRecord(lid);
-				{
-					cout<<"запись по id удалена"<<endl;
-				}
+				cout<<"Запись по указанной id была удалена"<<endl;
 			}
 			else
 			{
-				cout<<"Не удалось найти запись по id = "<< lid<<endl;
-
+				cout<<"Запись по указанной id не найдена"<<endl;
 			}
 		}
 		//Сортировать по году выпуска.
@@ -960,29 +1122,32 @@ int main ()
 			if(isExistFilebyId(lid,FILENAME))
 			{
 				cout<<"Текущие данные :"<<endl;
-				cout<<HotelRecord[currLineNum];
+				cout<<HotelRecord[lid];
 
 				Hotel ltemp;
 				cin>>ltemp;
 
 				EditHotelData(lid,FILENAME,ltemp);
 
-
 			}
 			else
 			{
 				cout<<"Не удалось найти запись по id = "<< lid<<endl;
-
 			}
 		}
 		else if(lshoose==6)
 		{
+			if(size<1)
+			{
+				cout<<"Список пуст"<<endl;
+				continue;
+			}
 			//сортировка по id 
 			Hotel ltest; 
 
-			for(int j = 1;j<=currLineNum;j++)
+			for(int j = 1;j<size;j++)
 			{
-				for(int i = 0;i<=currLineNum-1;i++)
+				for(int i = 0;i<size-1;i++)
 				{
 					if(HotelRecord[i].get_Id() > HotelRecord[i+1].get_Id())
 					{
@@ -997,17 +1162,23 @@ int main ()
 			
 			PrintHeader();
 			
-			for(int i =0 ; i<=currLineNum;i++)
+			for(int i =0 ; i<size;i++)
 			{
 				cout<<HotelRecord[i];
 			}
 		}	
 		else if(lshoose==7)
 		{
+			if(size<1)
+			{
+				cout<<"Список пуст"<<endl;
+				continue;
+			}
+
 			//сортировка по имени отеля
-			for (int i=1;  i<currLineNum  ;  i++)
+			for (int i=1;  i<size  ;  i++)
 			{            
-				for (int j=0;  j<currLineNum-1;  j++)
+				for (int j=0;  j<size-1;  j++)
 				{ 
 					Hotel ltest; 
 
@@ -1021,24 +1192,66 @@ int main ()
 					}			
 				}   
 			}	
-		}
 
-		else if(lshoose==8)
-		{
+			cout<<"После выполнения сортировки :" <<endl;
 			
-		}	
+			PrintHeader();
+			for(int i =0 ; i<size;i++)
+			{
+				cout<<HotelRecord[i];
+			}
+		}
+		// сортировка над элементами структур
+		else if(lshoose==8)
+		{	
+			if(size<1)
+			{
+				cout<<"Список пуст"<<endl;
+				continue;
+			}
+
+			//сортировка по имени отеля
+			for (int i=1;  i<size  ;  i++)
+			{            
+				for (int j=0;  j<size-1;  j++)
+				{ 
+					Hotel ltest; 
+					   
+					if(HotelRecord[j] >HotelRecord[j+1] )
+					{     
+						ltest = HotelRecord[j];           
+						HotelRecord[j] = HotelRecord[j+1];
+						HotelRecord[j+1] = ltest;	
+					}			
+				}   
+			}	
+
+			cout<<"После выполнения сортировки :" <<endl;
+			
+			PrintHeader();
+			for(int i =0 ; i<size;i++)
+			{
+				cout<<HotelRecord[i];
+			}
+
+		}
+	
 		//Сохранение результатов в файл
 	    else if(lshoose==9)
-		{
-			fstream file;
-			file.open(FILENAME, ios::out| ios::trunc);file.close();
-			for(int i =0;i<=currLineNum;i++)
+		{			
+			UpdateDate(FILENAME);
+
+			for(int i =0;i<size;i++)
 			{				
-				UpdateDate(HotelRecord[i],FILENAME);
+				Write(HotelRecord[i],FILENAME);			
 			}
+
+			cout<<"Данные сохранены"<<endl;
+
 		}
 		else if(lshoose==10)
 		{
+			cout<<"------------------------------------------------"<<endl;
 			// поиск 
 			int id;
 			cout<<"введите ID записи :";
@@ -1047,6 +1260,7 @@ int main ()
 			int pleaceNum;
 			cout<<"Введите количество мест	:";
 			cin>>pleaceNum;
+
 			FindByIdAndRoomNum(id,pleaceNum);
 		}
 	    // формирование перечня 
